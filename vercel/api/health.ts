@@ -3,11 +3,17 @@
  * proves the function deployed and booted — it says nothing about whether IA
  * is currently rate-limiting us. Also reports whether bearer auth is armed,
  * which is the thing most likely to be misconfigured.
+ *
+ * Routed through the Node bridge: Vercel's Node runtime invokes (req, res), so
+ * a bare web-signature export would hang instead of replying.
  */
 
-export default function handler(): Response {
+import { withNode } from "./_node-adapter.ts";
+
+export function handleHealthRequest(): Response {
 	const authRequired =
-		process.env.MCP_AUTH_TOKEN !== undefined && process.env.MCP_AUTH_TOKEN !== "";
+		process.env.MCP_AUTH_TOKEN !== undefined &&
+		process.env.MCP_AUTH_TOKEN !== "";
 
 	return new Response(
 		JSON.stringify(
@@ -37,3 +43,5 @@ export default function handler(): Response {
 		},
 	);
 }
+
+export default withNode(handleHealthRequest);

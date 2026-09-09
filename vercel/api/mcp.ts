@@ -37,6 +37,7 @@ import { createServer } from "mcp-wayback-machine/server";
 import { CachingFetcher } from "mcp-wayback-machine/utils/cache";
 import { InMemoryRateLimiter } from "mcp-wayback-machine/utils/rate-limit";
 import { StaticTokenAuthProvider } from "mcp-wayback-machine/auth/provider";
+import { withNode } from "./_node-adapter.ts";
 
 const USER_AGENT = "wayback-mcp-vercel";
 const HEADER_ACCESS_KEY = "X-Archive-Access-Key";
@@ -212,7 +213,11 @@ function jsonRpcError(message: string, status: number): Response {
 	);
 }
 
-export default async function handler(request: Request): Promise<Response> {
+/**
+ * The Web-standard MCP handler. Exported for local testing; in production it is
+ * reached through the Node bridge below, never called directly by Vercel.
+ */
+export async function handleMcpRequest(request: Request): Promise<Response> {
 	if (request.method === "OPTIONS") {
 		return withCors(new Response(null, { status: 204 }));
 	}
@@ -260,3 +265,5 @@ export default async function handler(request: Request): Promise<Response> {
 		}
 	}
 }
+
+export default withNode(handleMcpRequest);
