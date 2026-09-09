@@ -1,0 +1,17 @@
+{
+  "name": "wayback-mcp-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vercel-hosted Streamable HTTP transport for the Wayback Machine MCP server",
+  "license": "CC-BY-NC-SA-4.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "mcp-wayback-machine": "3.7.1",
+    "zod": "4.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.0",
+    "typescript": "5.9.3"
+  }
+}
