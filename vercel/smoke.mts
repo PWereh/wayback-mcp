@@ -1,7 +1,7 @@
 // Local smoke test: drives the Vercel handler with synthetic Requests.
 // Run: node --experimental-strip-types smoke.mts
 import { handleMcpRequest as handler } from "./api/mcp.ts";
-import { handleHealthRequest as health } from "./api/health.ts";
+import { handleHealthRequest as health } from "./api/mcp.ts";
 
 function post(body: unknown, headers: Record<string, string> = {}) {
 	return new Request("https://local.test/mcp", {
