@@ -6,10 +6,14 @@ stdio process.
 
 ## Endpoints
 
+Live at **https://wayback-mcp.vercel.app**
+
 | Path | Purpose |
 |------|---------|
 | `POST /mcp` | The MCP endpoint (Streamable HTTP, stateless, JSON responses) |
-| `GET /` | Liveness + configuration probe (JSON) |
+| `GET /` or `GET /health` | Liveness + configuration probe (JSON), no auth required |
+
+`GET /mcp` is left to the transport's SSE stream and does not answer the probe.
 
 ## Client configuration
 
@@ -18,7 +22,7 @@ stdio process.
   "mcpServers": {
     "wayback-mcp": {
       "type": "http",
-      "url": "https://<deployment-host>/mcp",
+      "url": "https://wayback-mcp.vercel.app/mcp",
       "headers": { "Authorization": "Bearer <MCP_AUTH_TOKEN>" }
     }
   }
@@ -36,6 +40,18 @@ stdio process.
 Clients may instead send `X-Archive-Access-Key` / `X-Archive-Secret-Key` per
 request; those override the environment variables.
 
+## Deploying
+
+The Vercel project is **not linked to GitHub** (linking requires installing the
+Vercel GitHub App), so `git push` does not redeploy. From the repository root:
+
+```bash
+vercel deploy --prod --yes --scope pwerehs-projects
+```
+
+The project's `rootDirectory` is `vercel`, so deploy from the repo root, not
+from inside this directory.
+
 ## How this differs from the upstream Worker
 
 Upstream ships a Cloudflare Worker entry point (`src/worker.ts`). This directory
@@ -49,6 +65,12 @@ is a Vercel adaptation of it, not a replacement:
 - **Timeout.** The Worker aborts at 25s (free tier caps at 30s). Here
   `maxDuration` is 60s with an internal abort at 55s, because Wayback CDX
   prefix queries routinely take 30–45s.
+- **Invocation signature.** Vercel's Node runtime invokes `(req, res)`, not the
+  Worker's `(request: Request) => Response`. `api/mcp.ts` inlines a bridge for
+  both directions. Exporting a bare web handler hangs the invocation to
+  `FUNCTION_INVOCATION_TIMEOUT`; splitting the bridge into a separate
+  `api/_node-adapter.ts` built cleanly but failed every invocation with
+  `FUNCTION_INVOCATION_FAILED`, so the function imports only npm packages.
 - **Rate limiting is per-instance.** `InMemoryRateLimiter` state lives in one
   warm instance. Vercel may run many concurrently, so the effective outbound
   rate can exceed 15/min under load. Treat it as politeness, not a hard cap.
